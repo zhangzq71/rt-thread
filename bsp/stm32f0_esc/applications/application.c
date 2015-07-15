@@ -31,6 +31,8 @@
 /* led thread entry */
 static void led_thread_entry(void* parameter)
 {
+    rt_hw_motor_startup();
+    
 	while(1)
 	{
         rt_hw_led_on();
@@ -39,7 +41,7 @@ static void led_thread_entry(void* parameter)
         rt_hw_led_off();
         rt_thread_delay(RT_TICK_PER_SECOND / 20);
 
-        TIM_GenerateEvent(TIM1, TIM_EventSource_COM);
+        //TIM_GenerateEvent(TIM1, TIM_EventSource_COM);
 	}
 }
 

@@ -7,4 +7,6 @@
 
 void rt_hw_motor_init(void);
 
+void rt_hw_motor_startup(void);
+
 #endif		// __MOTOR_H__

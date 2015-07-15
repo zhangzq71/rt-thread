@@ -5,6 +5,8 @@
 #endif
 
 static __IO uint32_t step = 1;
+static __IO uint16_t initPeriod;
+static __IO float index;
 
 void rt_hw_motor_init(void)
 {
@@ -74,7 +76,7 @@ void rt_hw_motor_init(void)
 	/* Time Base configuration */
 	TIM_TimeBaseStructure.TIM_Prescaler = 0;
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-	TIM_TimeBaseStructure.TIM_Period = 4095;
+	TIM_TimeBaseStructure.TIM_Period = 1000;
 	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
 	TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
 
@@ -84,18 +86,18 @@ void rt_hw_motor_init(void)
 	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_Timing;
 	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
 	TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Enable;
-	TIM_OCInitStructure.TIM_Pulse = 1023;
+	TIM_OCInitStructure.TIM_Pulse = 800;
 	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
-	TIM_OCInitStructure.TIM_OCNPolarity = TIM_OCNPolarity_Low;
+	TIM_OCInitStructure.TIM_OCNPolarity = TIM_OCNPolarity_High;
 	TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Set;
 	TIM_OCInitStructure.TIM_OCNIdleState = TIM_OCNIdleState_Set;
 
 	TIM_OC1Init(TIM1, &TIM_OCInitStructure);
 
-	TIM_OCInitStructure.TIM_Pulse = 1023;
+	TIM_OCInitStructure.TIM_Pulse = 800;
 	TIM_OC2Init(TIM1, &TIM_OCInitStructure);
 
-	TIM_OCInitStructure.TIM_Pulse = 1023;
+	TIM_OCInitStructure.TIM_Pulse = 800;
 	TIM_OC3Init(TIM1, &TIM_OCInitStructure);
 
 	/* Automatic Output enable, Break, dead time and lock configuration*/
@@ -247,4 +249,77 @@ void TIM1_BRK_UP_TRG_COM_IRQHandler(void)
 		TIM_CCxNCmd(TIM1, TIM_Channel_2, TIM_CCxN_Disable);
 		step = 1;
 	}
+}
+
+/**
+  * @brief  This function handles TIM2 global interrupt request.
+  * @param  None
+  * @retval None
+  */
+void TIM2_IRQHandler(void)
+{
+	if (TIM_GetITStatus(TIM2, TIM_IT_CC1) != RESET)
+	{
+		uint16_t c;
+
+		TIM_ClearITPendingBit(TIM2, TIM_IT_CC1);
+
+		c = TIM_GetCapture1(TIM2);
+
+		index *= 99.0f / 100.0f;
+		if (index < 0.012087979)
+			index = 99.0f / 100.0f;;
+		TIM_SetCompare1(TIM2, c + (300000.0f * index));
+
+		TIM_GenerateEvent(TIM1, TIM_EventSource_COM);
+	}
+}
+
+void rt_hw_motor_startup(void)
+{
+	uint16_t prescalerValue = 0;
+
+	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
+	TIM_OCInitTypeDef  TIM_OCInitStructure;
+	NVIC_InitTypeDef NVIC_InitStructure;
+
+	/* TIM2 clock enable */
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+
+	/* Enable the TIM3 gloabal Interrupt */
+	NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPriority = 2;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+
+	prescalerValue = (uint16_t) (SystemCoreClock  / 1000000) - 1;
+
+	/* Time base configuration */
+	TIM_TimeBaseStructure.TIM_Period = 65535;
+	TIM_TimeBaseStructure.TIM_Prescaler = 0;
+	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+
+	TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
+
+	/* Prescaler configuration */
+	TIM_PrescalerConfig(TIM2, prescalerValue, TIM_PSCReloadMode_Immediate);
+
+	/* Output Compare Timing Mode configuration: Channel1 */
+	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_Timing;
+	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCInitStructure.TIM_Pulse = 30000;
+	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
+
+	TIM_OC1Init(TIM2, &TIM_OCInitStructure);
+
+	TIM_OC1PreloadConfig(TIM2, TIM_OCPreload_Disable);
+
+	index = 99.0f / 100.0f;
+
+	/* TIM Interrupts enable */
+	TIM_ITConfig(TIM2, TIM_IT_CC1, ENABLE);
+
+	/* TIM3 enable counter */
+	TIM_Cmd(TIM2, ENABLE);
 }
