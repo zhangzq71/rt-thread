@@ -9,6 +9,7 @@ src = Split("""
 board.c
 stm32f4xx_it.c
 usart.c
+hw_stepper.c
 """)
 
 # add Ethernet drivers.
