@@ -1,39 +1,25 @@
 #ifndef __HW_STEPPER_H__
 #define __HW_STEPPER_H__
 
-/*! \brief Holding data used by timer interrupt for speed ramp calculation.
+typedef enum _tagMotor { 
+    MOTOR1, MOTOR2, MOTOR3, MOTOR4, MOTOR5 
+} motor;
+
+void stepper_init(void);
+
+/*! \brief Move the stepper motor a given number of steps.
  *
- *  Contains data used by timer interrupt to calculate speed profile.
- *  Data is written to it by move(), when stepper motor is moving (timer
- *  interrupt running) data is read/updated when calculating a new step_delay
+ *  Makes the stepper motor move the given number of steps.
+ *  It accelrate with given accelration up to maximum speed and decelerate
+ *  with given deceleration so it stops at the given step.
+ *  If accel/decel is to small and steps to move is to few, speed might not
+ *  reach the max speed limit before deceleration starts.
+ *
+ *  \param step  Number of steps to move (pos - CW, neg - CCW).
+ *  \param accel  Accelration to use, in 0.01*rad/sec^2.
+ *  \param decel  Decelration to use, in 0.01*rad/sec^2.
+ *  \param speed  Max speed, in 0.01*rad/sec.
  */
-struct speed_ramp_data {
-    //! What part of the speed ramp we are in.
-    unsigned char run_state : 3;
-    //! Direction stepper motor should move.
-    unsigned char dir : 1;
-    //! Peroid of next timer delay. At start this value set the accelration rate.
-    unsigned int step_delay;
-    //! What step_pos to start decelaration
-    unsigned int decel_start;
-    //! Sets deceleration rate.
-    signed int decel_val;
-    //! Minimum time delay (max speed)
-    signed int min_delay;
-    //! Counter used when accelerateing/decelerateing to calculate step_delay.
-    signed int accel_count;
-};
-
-struct stm32_gpio {
-    GPIO_TypeDef *gpio;
-    GPIO_InitTypeDef init;
-};
-
-struct stepper_data {
-    struct speed_ramp_data speed_ramp;
-    struct stm32_gpio pin_plus;
-    struct stm32_gpio pin_dir;
-    struct stm32_gpio pin_en;
-};
+ void stepper_move(motor m, uint32_t step, uint32_t accel, uint32_t decel, uint32_t speed);
 
 #endif	// __HW_STEPPER_H__
