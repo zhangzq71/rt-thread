@@ -2,7 +2,11 @@
 #define __HW_STEPPER_H__
 
 typedef enum _tagMotor { 
-    MOTOR1, MOTOR2, MOTOR3, MOTOR4, MOTOR5 
+    MOTOR1 = 0, 
+    MOTOR2 = 1,
+    MOTOR3 = 2,
+    MOTOR4 = 3,
+    MOTOR5 = 4,
 } motor;
 
 void stepper_init(void);
@@ -20,6 +24,6 @@ void stepper_init(void);
  *  \param decel  Decelration to use, in 0.01*rad/sec^2.
  *  \param speed  Max speed, in 0.01*rad/sec.
  */
- void stepper_move(motor m, uint32_t step, uint32_t accel, uint32_t decel, uint32_t speed);
+ void stepper_move(motor m, int32_t step, uint32_t accel, uint32_t decel, uint32_t speed);
 
 #endif	// __HW_STEPPER_H__

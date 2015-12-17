@@ -23,6 +23,8 @@
 #include "stm32f4xx_eth.h"
 #endif
 
+#include <hw_stepper.h>
+
 #ifdef RT_USING_GDB
 #include <gdb_stub.h>
 #endif
@@ -52,6 +54,14 @@ void rt_init_thread_entry(void* parameter)
         rt_kprintf("TCP/IP initialized!\n");
     }
 #endif
+
+    stepper_init();
+    stepper_move(MOTOR1, -4000, 100, 100, 1000);
+
+    while (1)
+    {
+        rt_thread_delay(100);
+    }
 }
 
 int rt_application_init()
