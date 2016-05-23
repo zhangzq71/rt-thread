@@ -15,32 +15,25 @@
 #include <stm32f10x.h>
 
 // led define
-#ifdef STM32_SIMULATOR
-#define led1_rcc                    RCC_APB2Periph_GPIOA
-#define led1_gpio                   GPIOA
-#define led1_pin                    (GPIO_Pin_5)
+#define led1_rcc                    RCC_APB2Periph_GPIOB
+#define led1_gpio                   GPIOB
+#define led1_pin                    (GPIO_Pin_3)
 
-#define led2_rcc                    RCC_APB2Periph_GPIOA
-#define led2_gpio                   GPIOA
-#define led2_pin                    (GPIO_Pin_6)
+#define led2_rcc                    RCC_APB2Periph_GPIOB
+#define led2_gpio                   GPIOB
+#define led2_pin                    (GPIO_Pin_4)
 
-#else
-
-#define led1_rcc                    RCC_APB2Periph_GPIOE
-#define led1_gpio                   GPIOE
-#define led1_pin                    (GPIO_Pin_2)
-
-#define led2_rcc                    RCC_APB2Periph_GPIOE
-#define led2_gpio                   GPIOE
-#define led2_pin                    (GPIO_Pin_3)
-
-#endif // led define #ifdef STM32_SIMULATOR
+#define led3_rcc                    RCC_APB2Periph_GPIOB
+#define led3_gpio                   GPIOB
+#define led3_pin                    (GPIO_Pin_5)
 
 void rt_hw_led_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
-    RCC_APB2PeriphClockCmd(led1_rcc|led2_rcc,ENABLE);
+    RCC_APB2PeriphClockCmd(led1_rcc | led2_rcc | led3_rcc,ENABLE);
+    
+    GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);
 
     GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_Out_PP;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -50,6 +43,9 @@ void rt_hw_led_init(void)
 
     GPIO_InitStructure.GPIO_Pin   = led2_pin;
     GPIO_Init(led2_gpio, &GPIO_InitStructure);
+    
+    GPIO_InitStructure.GPIO_Pin   = led3_pin;
+    GPIO_Init(led3_gpio, &GPIO_InitStructure);
 }
 
 void rt_hw_led_on(rt_uint32_t n)
@@ -62,6 +58,10 @@ void rt_hw_led_on(rt_uint32_t n)
     case 1:
         GPIO_SetBits(led2_gpio, led2_pin);
         break;
+    case 2:
+        GPIO_SetBits(led3_gpio, led3_pin);
+        break;
+
     default:
         break;
     }
@@ -77,9 +77,21 @@ void rt_hw_led_off(rt_uint32_t n)
     case 1:
         GPIO_ResetBits(led2_gpio, led2_pin);
         break;
+    case 2:
+        GPIO_ResetBits(led3_gpio, led3_pin);
+        break;
     default:
         break;
     }
+}
+
+void rt_hw_led_set(rt_uint16_t n)
+{
+    rt_uint16_t val = GPIO_ReadOutputData(led3_gpio);
+    val &= ~0x38;
+    val |= n << 3;
+    
+    GPIO_Write(led3_gpio, val);
 }
 
 #ifdef RT_USING_FINSH
@@ -103,7 +115,10 @@ void led(rt_uint32_t led, rt_uint32_t value)
             rt_hw_led_off(0);
             break;
         case 1:
-            rt_hw_led_on(0);
+            rt_hw_led_on(1);
+            break;
+        case 2:
+            rt_hw_led_on(2);
             break;
         default:
             break;
@@ -116,10 +131,13 @@ void led(rt_uint32_t led, rt_uint32_t value)
         switch (value)
         {
         case 0:
-            rt_hw_led_off(1);
+            rt_hw_led_off(0);
             break;
         case 1:
             rt_hw_led_on(1);
+            break;
+        case 2:
+            rt_hw_led_on(2);
             break;
         default:
             break;

@@ -20,5 +20,6 @@
 void rt_hw_led_init(void);
 void rt_hw_led_on(rt_uint32_t led);
 void rt_hw_led_off(rt_uint32_t led);
+void rt_hw_led_set(rt_uint16_t led);
 
 #endif
