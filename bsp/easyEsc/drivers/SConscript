@@ -10,6 +10,8 @@ board.c
 stm32f10x_it.c
 led.c
 usart.c
+bldc.c
+timer.c
 """)
 
 

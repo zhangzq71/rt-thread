@@ -33,6 +33,10 @@
 #endif
 
 #include "led.h"
+#include "bldc.h"
+#include "timer.h"
+
+extern vu16 ADC_VALUE[];
 
 ALIGN(RT_ALIGN_SIZE)
 static rt_uint8_t led_stack[ 512 ];
@@ -42,16 +46,22 @@ static void led_thread_entry(void* parameter)
     unsigned int count=0;
 
     rt_hw_led_init();
+    rt_hw_hall_init();
+    rt_hw_timer_init();
 
     while (1)
     {
+        Enable_CH();
+        Enable_AL();
+
         /* led1 on */
-        rt_kprintf("led on, count : %d\r\n",count);
+        rt_kprintf("led on, count : %d, %d,%d,%d,%d,%d,%d\r\n",count, ADC_VALUE[0], ADC_VALUE[1], ADC_VALUE[2], ADC_VALUE[3], ADC_VALUE[4], ADC_VALUE[5]);
+        //rt_kprintf("led on, count : %d, %d\r\n",count, rt_hw_get_hall_status());
 
         count++;
         //rt_hw_led_on(count % 3);
         rt_hw_led_set(7);
-        rt_thread_delay( RT_TICK_PER_SECOND/2 ); /* sleep 0.5 second and switch to other thread */
+        rt_thread_delay( RT_TICK_PER_SECOND / 10 ); /* sleep 0.5 second and switch to other thread */
 
         /* led1 off */
 #ifndef RT_USING_FINSH
@@ -59,7 +69,7 @@ static void led_thread_entry(void* parameter)
 #endif
         //rt_hw_led_off(count % 3);
         rt_hw_led_set(0);
-        rt_thread_delay( RT_TICK_PER_SECOND/2 );
+        rt_thread_delay( RT_TICK_PER_SECOND / 10 );
     }
 }
 
