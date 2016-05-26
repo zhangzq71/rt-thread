@@ -1,5 +1,6 @@
 #include <rtthread.h>
 #include <stm32f10x.h>
+#include "timer.h"
 
 //#define SENSOR_LOGIC                 1
 
@@ -135,4 +136,65 @@ static void adc_init(void)
     while(ADC_GetCalibrationStatus(ADC1));
 
     ADC_SoftwareStartConvCmd(ADC1, ENABLE);
+}
+
+void rt_hw_commutate(void)
+{
+    _hallStatus++;
+    _hallStatus = _hallStatus % 6;
+    
+    u8 hall = _hallStatus + 1;
+    
+    Disable_AH();
+    Disable_AL();
+    Disable_BH();
+    Disable_BL();
+    Disable_CH();
+    Disable_CL();
+    
+    switch (hall)
+    {
+    /* 顺时针方向旋转 */
+        case 3:
+        {
+            Enable_CH();
+            Enable_AL();
+        }
+        break;
+
+        case 1:
+        {
+            Enable_CH();
+            Enable_BL();
+        }
+        break;
+
+        case 5:
+        {
+            Enable_AH();
+            Enable_BL();
+        }
+        break;
+
+        case 4:
+        {
+            Enable_AH();
+            Enable_CL();;
+        }
+        break;
+
+        case 6:
+        {
+            Enable_BH();
+            Enable_CL();
+        }
+        break;
+
+        case 2:
+        {
+            Enable_BH();
+            Enable_AL();
+        }
+        break;
+    }
 }
