@@ -53,24 +53,24 @@ static void led_thread_entry(void* parameter)
 
     while (1)
     {
-        rt_hw_commutate();
+        //rt_hw_commutate();
         /* led1 on */
-        rt_kprintf("led on, count : %d, %d,%d,%d,%d,%d,%d\r\n",count, ADC_VALUE[0], ADC_VALUE[1], ADC_VALUE[2], ADC_VALUE[3], ADC_VALUE[4], ADC_VALUE[5]);
-        //rt_kprintf("led on, count : %d, %d\r\n",count, rt_hw_get_hall_status());
+        //rt_kprintf("led on, count : %d, %d,%d,%d,%d,%d,%d\r\n",count, ADC_VALUE[0], ADC_VALUE[1], ADC_VALUE[2], ADC_VALUE[3], ADC_VALUE[4], ADC_VALUE[5]);
+        rt_kprintf("led on, count : %d, %d\r\n",count, rt_hw_get_hall_status());
 
         count++;
         //rt_hw_led_on(count % 3);
         rt_hw_led_set(7);
-        rt_thread_delay( RT_TICK_PER_SECOND / 1 ); /* sleep 0.5 second and switch to other thread */
+        rt_thread_delay( RT_TICK_PER_SECOND / 5 ); /* sleep 0.5 second and switch to other thread */
 
-        rt_hw_commutate();
+        //rt_hw_commutate();
         /* led1 off */
 #ifndef RT_USING_FINSH
         rt_kprintf("led off\r\n");
 #endif
         //rt_hw_led_off(count % 3);
         rt_hw_led_set(0);
-        rt_thread_delay( RT_TICK_PER_SECOND / 1 );
+        rt_thread_delay( RT_TICK_PER_SECOND / 5 );
     }
 }
 
