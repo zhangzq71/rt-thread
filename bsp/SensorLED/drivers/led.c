@@ -21,42 +21,43 @@
 
 static const uint16_t gamma_table[] = {
 	/* Gamma 1.3 */
-	1,	4,	9,	17,	26,	37,	51,	67,
-	84,	104,	126,	149,	175,	203,	233,	265,
-	299,	334,	372,	412,	454,	499,	545,	593,
-	643,	695,	749,	805,	864,	924,	986,	1050,
-	1116,	1185,	1255,	1327,	1402,	1478,	1556,	1637,
-	1719,	1803,	1890,	1978,	2068,	2161,	2255,	2352,
-	2450,	2550,	2653,	2757,	2864,	2972,	3082,	3195,
-	3309,	3426,	3544,	3664,	3787,	3911,	4038,	4166,
-	4296,	4429,	4563,	4700,	4838,	4978,	5121,	5265,
-	5411,	5560,	5710,	5862,	6017,	6173,	6331,	6492,
-	6654,	6818,	6985,	7153,	7323,	7495,	7670,	7846,
-	8024,	8204,	8387,	8571,	8757,	8945,	9135,	9327,
-	9521,	9718,	9916,	10116,	10318,	10522,	10728,	10936,
-	11146,	11358,	11572,	11788,	12006,	12226,	12448,	12672,
-	12897,	13125,	13355,	13587,	13821,	14057,	14294,	14534,
-	14776,	15020,	15265,	15513,	15763,	16014,	16268,	16524,
-	16781,	17041,	17302,	17566,	17831,	18099,	18368,	18640,
-	18913,	19189,	19466,	19745,	20027,	20310,	20595,	20883,
-	21172,	21463,	21756,	22051,	22349,	22648,	22949,	23252,
-	23557,	23864,	24173,	24484,	24797,	25112,	25429,	25748,
-	26069,	26391,	26716,	27043,	27372,	27702,	28035,	28370,
-	28707,	29045,	29386,	29728,	30073,	30419,	30768,	31118,
-	31471,	31825,	32182,	32540,	32900,	33263,	33627,	33993,
-	34361,	34731,	35104,	35478,	35854,	36232,	36612,	36994,
-	37378,	37764,	38152,	38542,	38933,	39327,	39723,	40121,
-	40521,	40922,	41326,	41732,	42139,	42549,	42960,	43374,
-	43789,	44207,	44626,	45048,	45471,	45896,	46324,	46753,
-	47184,	47617,	48052,	48490,	48929,	49370,	49813,	50258,
-	50705,	51154,	51604,	52057,	52512,	52969,	53428,	53888,
-	54351,	54816,	55282,	55751,	56222,	56694,	57169,	57645,
-	58123,	58604,	59086,	59570,	60057,	60545,	61035,	61527,
-	62021,	62517,	63016,	63516,	64018,	64521,	65027,	65535,
+	0,	0,	0,	0,	0,	0,	1,	1,
+	2,	3,	4,	5,	7,	9,	11,	13,
+	16,	19,	23,	27,	32,	37,	42,	48,
+	55,	62,	69,	78,	87,	96,	107,	118,
+	130,	142,	155,	169,	184,	200,	217,	234,
+	253,	272,	293,	314,	337,	360,	385,	410,
+	437,	465,	494,	524,	556,	588,	622,	658,
+	694,	732,	771,	812,	854,	897,	942,	988,
+	1036,	1085,	1136,	1189,	1243,	1298,	1356,	1415,
+	1475,	1538,	1602,	1667,	1735,	1804,	1876,	1949,
+	2024,	2100,	2179,	2260,	2343,	2427,	2514,	2603,
+	2693,	2786,	2881,	2978,	3078,	3179,	3283,	3389,
+	3497,	3607,	3720,	3835,	3952,	4072,	4194,	4319,
+	4446,	4575,	4707,	4842,	4979,	5118,	5261,	5405,
+	5553,	5703,	5856,	6011,	6169,	6330,	6494,	6660,
+	6830,	7002,	7177,	7355,	7536,	7719,	7906,	8096,
+	8289,	8484,	8683,	8885,	9090,	9298,	9510,	9724,
+	9942,	10163,	10387,	10614,	10845,	11079,	11317,	11557,
+	11802,	12049,	12300,	12555,	12813,	13074,	13339,	13608,
+	13880,	14156,	14435,	14718,	15005,	15295,	15589,	15887,
+	16189,	16494,	16803,	17117,	17433,	17754,	18079,	18408,
+	18740,	19077,	19418,	19762,	20111,	20464,	20821,	21182,
+	21547,	21917,	22290,	22668,	23050,	23436,	23827,	24222,
+	24621,	25025,	25433,	25845,	26262,	26683,	27109,	27539,
+	27974,	28413,	28857,	29306,	29759,	30217,	30680,	31147,
+	31619,	32095,	32577,	33063,	33554,	34050,	34551,	35056,
+	35567,	36082,	36602,	37128,	37658,	38194,	38734,	39280,
+	39830,	40386,	40947,	41513,	42084,	42661,	43243,	43830,
+	44422,	45019,	45622,	46231,	46844,	47463,	48088,	48718,
+	49353,	49994,	50641,	51293,	51950,	52614,	53282,	53957,
+	54637,	55323,	56014,	56712,	57415,	58123,	58838,	59558,
+	60285,	61017,	61755,	62499,	63249,	64005,	64767,	65535,
 };
 
 #define DUTY_MIN    30
-#define DUTY_MAX    950
+#define DUTY_MAX    955
+#define DELAY_TIME  3
 
 static uint16_t duty_table[256];
 
@@ -69,7 +70,8 @@ static rt_timer_t ledTimer;
 struct _tag_Led_State {
     unsigned short PIR_raised : 1;
     unsigned short PIR_downed : 1;
-    unsigned short PWM_duty : 14;
+    unsigned short delay_time : 6;
+    unsigned short PWM_duty : 8;
 } LED_State[3];
 
 /* Initial led gpio pin  */
@@ -86,7 +88,7 @@ void rt_hw_led_init(void)
         duty_table[i] = val + 30;
     }
 
-		memset(&LED_State, 0, sizeof(LED_State));
+	memset(&LED_State, 0, sizeof(LED_State));
     ledTimer = rt_timer_create("timer1", led_timer, RT_NULL, 1, RT_TIMER_FLAG_PERIODIC);
     if (ledTimer != RT_NULL)
         rt_timer_start(ledTimer);
@@ -100,12 +102,12 @@ static void PIR_sensor_init(void)
 	
     // Enable 3 EXTI line for PIR modules
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
-		RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
     /*Configure GPIO pins : PA1 PA2 PA3 */
     GPIO_InitStruct.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3;
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
-    GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_UP;
+    GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_DOWN;
     GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -136,7 +138,7 @@ static void PIR_sensor_init(void)
     NVIC_InitStruct.NVIC_IRQChannelPriority = 0x00;
     NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStruct);
-		NVIC->ISER[0] = 0x10060;
+    NVIC->ISER[0] = 0x10060;
 }
 
 static void PWM_init(void)
@@ -154,7 +156,7 @@ static void PWM_init(void)
     /* GPIOA Configuration: TIM3 CH1 (PA6) and TIM3 CH2 (PA7) */
     GPIO_InitStruct.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
-    GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_UP;
+    GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_DOWN;
     GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -162,7 +164,7 @@ static void PWM_init(void)
     /* GPIOB Configuration: TIM3 CH4 (PB1) */
     GPIO_InitStruct.GPIO_Pin = GPIO_Pin_1;
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
-    GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_UP;
+    GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_DOWN;
     GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -214,6 +216,7 @@ void led_pir_int(char which, char isRaised)
 
 static void led_timer(void *param)
 {
+    static char count_time = 0;
     static char count_down = 0;
 
     if (LED_State[0].PIR_raised == 1)
@@ -224,6 +227,28 @@ static void led_timer(void *param)
 			
         if (LED_State[0].PWM_duty < 255)
             LED_State[0].PWM_duty++;
+
+        if (GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_1) == Bit_RESET)
+        {
+            if (count_time++ >= 100)
+            {
+                count_time = 0;
+
+                LED_State[0].delay_time++;
+                if (LED_State[0].delay_time > DELAY_TIME)
+                {
+                    LED_State[0].PIR_downed = 1;
+                    LED_State[0].PIR_raised = 0;
+
+                    LED_State[0].delay_time = 0;
+                }
+            }
+        }
+        else
+        {
+            LED_State[0].delay_time = 0;
+            count_time = 0;
+        }
     }
     else if (LED_State[0].PIR_downed == 1)
     {
@@ -255,11 +280,12 @@ void EXTI0_1_IRQHandler(void)
         if (GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_1) == Bit_SET)
         {
             LED_State[0].PIR_raised = 1;
+            LED_State[0].delay_time = 0;
         }
         else
         {
-            LED_State[0].PIR_raised = 0;
-            LED_State[0].PIR_downed = 1;
+            // LED_State[0].PIR_raised = 0;
+            // LED_State[0].PIR_downed = 1;
         }
 
         EXTI_ClearITPendingBit(EXTI_Line1);
@@ -273,11 +299,15 @@ void EXTI2_3_IRQHandler(void)
         if (GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_2) == Bit_SET)
         {
             LED_State[1].PIR_raised = 1;
+
+            LED_State[0].PIR_raised = 1;
+            LED_State[0].delay_time = 0;
+
         }
         else
         {
-            LED_State[1].PIR_raised = 0;
-            LED_State[1].PIR_downed = 1;
+            // LED_State[1].PIR_raised = 0;
+            // LED_State[1].PIR_downed = 1;
         }
 
         EXTI_ClearITPendingBit(EXTI_Line2);
@@ -287,11 +317,14 @@ void EXTI2_3_IRQHandler(void)
         if (GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_3) == Bit_SET)
         {
             LED_State[2].PIR_raised = 1;
+
+            LED_State[0].PIR_raised = 1;
+            LED_State[0].delay_time = 0;
         }
         else
         {
-            LED_State[2].PIR_raised = 0;
-            LED_State[2].PIR_downed = 1;
+            // LED_State[2].PIR_raised = 0;
+            // LED_State[2].PIR_downed = 1;
         }
         
         EXTI_ClearITPendingBit(EXTI_Line3);
