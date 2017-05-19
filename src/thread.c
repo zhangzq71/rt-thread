@@ -36,6 +36,8 @@
  * 2011-09-08     Bernard      fixed the scheduling issue in rt_thread_startup.
  * 2012-12-29     Bernard      fixed compiling warning.
  * 2016-08-09     ArdaFu       add thread suspend and resume hook.
+ * 2017-04-10     armink       fixed the rt_thread_delete and rt_thread_detach
+                               bug when thread has not startup.
  */
 
 #include <rtthread.h>
@@ -48,7 +50,9 @@ extern rt_list_t rt_thread_defunct;
 #ifdef RT_USING_HOOK
 
 static void (*rt_thread_suspend_hook)(rt_thread_t thread);
-static void (*rt_thread_resume_hook)(rt_thread_t thread);
+static void (*rt_thread_resume_hook) (rt_thread_t thread);
+static void (*rt_thread_inited_hook) (rt_thread_t thread);
+
 /**
  * @ingroup Hook
  * This function sets a hook function when the system suspend a thread. 
@@ -61,6 +65,7 @@ void rt_thread_suspend_sethook(void (*hook)(rt_thread_t thread))
 {
     rt_thread_suspend_hook = hook;
 }
+
 /**
  * @ingroup Hook
  * This function sets a hook function when the system resume a thread. 
@@ -73,6 +78,18 @@ void rt_thread_resume_sethook(void (*hook)(rt_thread_t thread))
 {
     rt_thread_resume_hook = hook;
 }
+
+/**
+ * @ingroup Hook
+ * This function sets a hook function when a thread is initialized. 
+ *
+ * @param hook the specified hook function
+ */
+void rt_thread_inited_sethook(void (*hook)(rt_thread_t thread))
+{
+	rt_thread_inited_hook = hook;
+}
+
 #endif
 
 void rt_thread_exit(void)
@@ -161,6 +178,8 @@ static rt_err_t _rt_thread_init(struct rt_thread *thread,
                   thread,
                   0,
                   RT_TIMER_FLAG_ONE_SHOT);
+
+    RT_OBJECT_HOOK_CALL(rt_thread_inited_hook,(thread));
 
     return RT_EOK;
 }
@@ -280,8 +299,11 @@ rt_err_t rt_thread_detach(rt_thread_t thread)
     /* thread check */
     RT_ASSERT(thread != RT_NULL);
 
-    /* remove from schedule */
-    rt_schedule_remove_thread(thread);
+    if (thread->stat != RT_THREAD_INIT)
+    {
+        /* remove from schedule */
+        rt_schedule_remove_thread(thread);
+    }
 
     /* release thread timer */
     rt_timer_detach(&(thread->thread_timer));
@@ -375,8 +397,11 @@ rt_err_t rt_thread_delete(rt_thread_t thread)
     /* thread check */
     RT_ASSERT(thread != RT_NULL);
 
-    /* remove from schedule */
-    rt_schedule_remove_thread(thread);
+    if (thread->stat != RT_THREAD_INIT)
+    {
+        /* remove from schedule */
+        rt_schedule_remove_thread(thread);
+    }
 
     /* release thread timer */
     rt_timer_detach(&(thread->thread_timer));

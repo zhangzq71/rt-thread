@@ -15,6 +15,7 @@
  * 2015-01-31     armink       make sure the serial transmit complete in putc()
  * 2016-05-13     armink       add DMA Rx mode
  * 2017-01-19     aubr.cool    add interrupt Tx mode
+ * 2017-04-13     aubr.cool    correct Rx parity err
  */
 
 #include "stm32f10x.h"
@@ -48,15 +49,18 @@ struct stm32_uart
 {
     USART_TypeDef *uart_device;
     IRQn_Type irq;
-    struct stm32_uart_dma {
+    struct stm32_uart_dma
+    {
         /* dma channel */
         DMA_Channel_TypeDef *rx_ch;
         /* dma global flag */
         uint32_t rx_gl_flag;
         /* dma irq channel */
         uint8_t rx_irq_ch;
+        /* setting receive len */
+        rt_size_t setting_recv_len;
         /* last receive index */
-        rt_size_t last_recv_len;
+        rt_size_t last_recv_index;
     } dma;
 };
 
@@ -145,15 +149,15 @@ static int stm32_putc(struct rt_serial_device *serial, char c)
     RT_ASSERT(serial != RT_NULL);
     uart = (struct stm32_uart *)serial->parent.user_data;
 
-    if(serial->parent.open_flag & RT_DEVICE_FLAG_INT_TX)
+    if (serial->parent.open_flag & RT_DEVICE_FLAG_INT_TX)
     {
-          if(!(uart->uart_device->SR & USART_FLAG_TXE))
-          {
-              USART_ITConfig(uart->uart_device, USART_IT_TC, ENABLE);
-              return -1;
-          }
-          uart->uart_device->DR = c;
-          USART_ITConfig(uart->uart_device, USART_IT_TC, ENABLE);
+        if (!(uart->uart_device->SR & USART_FLAG_TXE))
+        {
+            USART_ITConfig(uart->uart_device, USART_IT_TC, ENABLE);
+            return -1;
+        }
+        uart->uart_device->DR = c;
+        USART_ITConfig(uart->uart_device, USART_IT_TC, ENABLE);
     }
     else
     {
@@ -188,24 +192,31 @@ static int stm32_getc(struct rt_serial_device *serial)
  */
 static void dma_uart_rx_idle_isr(struct rt_serial_device *serial) {
     struct stm32_uart *uart = (struct stm32_uart *) serial->parent.user_data;
-    rt_size_t recv_total_len, recv_len;
-    /* disable dma, stop receive data */
-    DMA_Cmd(uart->dma.rx_ch, DISABLE);
+    rt_size_t recv_total_index, recv_len;
+    rt_base_t level;
 
-    recv_total_len = serial->config.bufsz - DMA_GetCurrDataCounter(uart->dma.rx_ch);
-    if (recv_total_len > uart->dma.last_recv_len) {
-        recv_len = recv_total_len - uart->dma.last_recv_len;
-    } else {
-        recv_len = recv_total_len;
+    /* disable interrupt */
+    level = rt_hw_interrupt_disable();
+
+    recv_total_index = uart->dma.setting_recv_len - DMA_GetCurrDataCounter(uart->dma.rx_ch);
+    if (recv_total_index >= uart->dma.last_recv_index)
+    {
+        recv_len = recv_total_index - uart->dma.last_recv_index;
     }
-    uart->dma.last_recv_len = recv_total_len;
+    else
+    {
+        recv_len = uart->dma.setting_recv_len - uart->dma.last_recv_index + recv_total_index;
+    }
 
-    rt_hw_serial_isr(serial, RT_SERIAL_EVENT_RX_DMADONE | (recv_len << 8));
+    uart->dma.last_recv_index = recv_total_index;
+    /* enable interrupt */
+    rt_hw_interrupt_enable(level);
+
+    if (recv_len) rt_hw_serial_isr(serial, RT_SERIAL_EVENT_RX_DMADONE | (recv_len << 8));
 
     /* read a data for clear receive idle interrupt flag */
     USART_ReceiveData(uart->uart_device);
     DMA_ClearFlag(uart->dma.rx_gl_flag);
-    DMA_Cmd(uart->dma.rx_ch, ENABLE);
 }
 
 /**
@@ -215,24 +226,29 @@ static void dma_uart_rx_idle_isr(struct rt_serial_device *serial) {
  */
 static void dma_rx_done_isr(struct rt_serial_device *serial) {
     struct stm32_uart *uart = (struct stm32_uart *) serial->parent.user_data;
-    rt_size_t recv_total_len, recv_len;
-    /* disable dma, stop receive data */
-    DMA_Cmd(uart->dma.rx_ch, DISABLE);
+    rt_size_t recv_total_index, recv_len;
+    rt_base_t level;
 
-    recv_total_len = serial->config.bufsz - DMA_GetCurrDataCounter(uart->dma.rx_ch);
-    if (recv_total_len > uart->dma.last_recv_len) {
-        recv_len = recv_total_len - uart->dma.last_recv_len;
-    } else {
-        recv_len = recv_total_len;
+    /* disable interrupt */
+    level = rt_hw_interrupt_disable();
+
+    recv_total_index = uart->dma.setting_recv_len - DMA_GetCurrDataCounter(uart->dma.rx_ch);
+    if (recv_total_index >= uart->dma.last_recv_index)
+    {
+        recv_len = recv_total_index - uart->dma.last_recv_index;
     }
-    uart->dma.last_recv_len = recv_total_len;
+    else
+    {
+        recv_len = uart->dma.setting_recv_len - uart->dma.last_recv_index + recv_total_index;
+    }
 
-    rt_hw_serial_isr(serial, RT_SERIAL_EVENT_RX_DMADONE | (recv_len << 8));
+    uart->dma.last_recv_index = recv_total_index;
+    /* enable interrupt */
+    rt_hw_interrupt_enable(level);
+
+    if (recv_len) rt_hw_serial_isr(serial, RT_SERIAL_EVENT_RX_DMADONE | (recv_len << 8));
 
     DMA_ClearFlag(uart->dma.rx_gl_flag);
-    /* reload */
-    DMA_SetCurrDataCounter(uart->dma.rx_ch, serial->config.bufsz);
-    DMA_Cmd(uart->dma.rx_ch, ENABLE);
 }
 
 /**
@@ -247,7 +263,10 @@ static void uart_isr(struct rt_serial_device *serial) {
 
     if(USART_GetITStatus(uart->uart_device, USART_IT_RXNE) != RESET)
     {
-        rt_hw_serial_isr(serial, RT_SERIAL_EVENT_RX_IND);
+        if(USART_GetFlagStatus(uart->uart_device, USART_FLAG_PE) == RESET)
+        {
+            rt_hw_serial_isr(serial, RT_SERIAL_EVENT_RX_IND);
+        }
         /* clear interrupt */
         USART_ClearITPendingBit(uart->uart_device, USART_IT_RXNE);
     }
@@ -262,7 +281,7 @@ static void uart_isr(struct rt_serial_device *serial) {
         {
             rt_hw_serial_isr(serial, RT_SERIAL_EVENT_TX_DONE);
         }
-        USART_ITConfig(uart->uart_device, USART_IT_RXNE, DISABLE);
+        USART_ITConfig(uart->uart_device, USART_IT_TC, DISABLE);
         USART_ClearITPendingBit(uart->uart_device, USART_IT_TC);
     }
     if (USART_GetFlagStatus(uart->uart_device, USART_FLAG_ORE) == SET)
@@ -527,6 +546,8 @@ static void DMA_Configuration(struct rt_serial_device *serial) {
     DMA_InitTypeDef DMA_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
 
+    uart->dma.setting_recv_len = serial->config.bufsz;
+    
     /* enable transmit idle interrupt */
     USART_ITConfig(uart->uart_device, USART_IT_IDLE , ENABLE);
 
@@ -544,7 +565,7 @@ static void DMA_Configuration(struct rt_serial_device *serial) {
     DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
     DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
     DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
-    DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
+    DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
     DMA_InitStructure.DMA_Priority = DMA_Priority_High;
     DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
     DMA_Init(uart->dma.rx_ch, &DMA_InitStructure);
