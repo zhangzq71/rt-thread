@@ -28,6 +28,7 @@
  * 2014-01-26     Bernard      Check the sector size before mount.
  * 2017-02-13     Hichard      Update Fatfs version to 0.12b, support exFAT.
  * 2017-04-11     Bernard      fix the st_blksize issue.
+ * 2017-05-26     Urey         fix f_mount error when mount more fats
  */
 
 #include <rtthread.h>
@@ -114,11 +115,13 @@ int dfs_elm_mount(struct dfs_filesystem *fs, unsigned long rwflag, const void *d
     FRESULT result;
     int index;
     struct rt_device_blk_geometry geometry;
+    char logic_nbr[2] = {'0',':'};
 
     /* get an empty position */
     index = get_disk(RT_NULL);
     if (index == -1)
         return -DFS_STATUS_ENOENT;
+    logic_nbr[0] = '0' + index;
 
     /* save device */
     disk[index] = fs->dev_id;
@@ -140,7 +143,7 @@ int dfs_elm_mount(struct dfs_filesystem *fs, unsigned long rwflag, const void *d
     }
 
     /* mount fatfs, always 0 logic driver */
-    result = f_mount(fat,"", (BYTE)index);
+    result = f_mount(fat, (const TCHAR*)logic_nbr, 1);
     if (result == FR_OK)
     {
         char drive[8];
@@ -150,7 +153,7 @@ int dfs_elm_mount(struct dfs_filesystem *fs, unsigned long rwflag, const void *d
         dir = (DIR *)rt_malloc(sizeof(DIR));
         if (dir == RT_NULL)
         {
-            f_mount(RT_NULL,"",(BYTE)index);
+            f_mount(RT_NULL, (const TCHAR*)logic_nbr, 1);
             disk[index] = RT_NULL;
             rt_free(fat);
             return -DFS_STATUS_ENOMEM;
@@ -168,7 +171,7 @@ int dfs_elm_mount(struct dfs_filesystem *fs, unsigned long rwflag, const void *d
     }
 
 __err:
-    f_mount(RT_NULL, "", (BYTE)index);
+    f_mount(RT_NULL, (const TCHAR*)logic_nbr, 1);
     disk[index] = RT_NULL;
     rt_free(fat);
     return elm_result_to_dfs(result);
@@ -916,8 +919,8 @@ DWORD get_fattime(void)
     /* unlock scheduler. */
     rt_exit_critical();
 
-    fat_time =  (DWORD)(tm_now.tm_year - 80) << 25 | 
-                (DWORD)(tm_now.tm_mon + 1)   << 21 | 
+    fat_time =  (DWORD)(tm_now.tm_year - 80) << 25 |
+                (DWORD)(tm_now.tm_mon + 1)   << 21 |
                 (DWORD)tm_now.tm_mday        << 16 |
                 (DWORD)tm_now.tm_hour        << 11 |
                 (DWORD)tm_now.tm_min         <<  5 |
