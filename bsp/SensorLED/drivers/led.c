@@ -55,8 +55,8 @@ static const uint16_t gamma_table[] = {
 	60285,	61017,	61755,	62499,	63249,	64005,	64767,	65535,
 };
 
-#define DUTY_MIN    30
-#define DUTY_MAX    955
+#define DUTY_MIN    1
+#define DUTY_MAX    860
 #define DELAY_TIME  3
 
 static uint16_t duty_table[256];
@@ -85,10 +85,10 @@ void rt_hw_led_init(void)
     for (i = 0; i < 256; i++)
     {
         uint16_t val = (uint16_t)((float)(DUTY_MAX - DUTY_MIN) * (float)gamma_table[i] / (float)65535);
-        duty_table[i] = val + 30;
+        duty_table[i] = val + DUTY_MIN;
     }
 
-	memset(&LED_State, 0, sizeof(LED_State));
+		memset(&LED_State, 0, sizeof(LED_State));
     ledTimer = rt_timer_create("timer1", led_timer, RT_NULL, 1, RT_TIMER_FLAG_PERIODIC);
     if (ledTimer != RT_NULL)
         rt_timer_start(ledTimer);
@@ -102,7 +102,7 @@ static void PIR_sensor_init(void)
 	
     // Enable 3 EXTI line for PIR modules
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+		RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
     /*Configure GPIO pins : PA1 PA2 PA3 */
     GPIO_InitStruct.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3;
@@ -112,17 +112,16 @@ static void PIR_sensor_init(void)
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    // setup PA.4 for controlling enable/disable of XL6001
-
-    /*Configure GPIO pin : PA4 */
-    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_4;
+    // setup PA.5 for controlling enable/disable of XL6001
+    /*Configure GPIO pin : PA5 */
+    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_5;
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_OUT;
     GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_DOWN;
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /*Configure GPIO pin Output Level */
-    GPIO_SetBits(GPIOA, GPIO_Pin_4);
+    GPIO_SetBits(GPIOA, GPIO_Pin_5);
 
     /* Tell system that you will use PD0 for EXTI_Line0 */
     SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOA, EXTI_PinSource1 | EXTI_PinSource2 | EXTI_PinSource3);
@@ -329,4 +328,22 @@ void EXTI2_3_IRQHandler(void)
         
         EXTI_ClearITPendingBit(EXTI_Line3);
     }
+}
+
+void pir_raise(char raised)
+{
+//	if (raised == 0)
+//	{
+//		TIM_SetCompare1(TIM3, 20);
+//		TIM_SetCompare2(TIM3, 20);
+//		TIM_SetCompare4(TIM3, 20);
+//	}
+//	else
+//	{
+//		TIM_SetCompare1(TIM3, 850);
+//		TIM_SetCompare2(TIM3, 850);
+//		TIM_SetCompare4(TIM3, 850);
+//	}
+		
+	LED_State[0].PIR_raised = raised;
 }

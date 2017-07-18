@@ -31,11 +31,18 @@
 /* led thread entry */
 static void led_thread_entry(void* parameter)
 {
+	char raised = 0;
+	
+	rt_thread_delay(RT_TICK_PER_SECOND);
 	rt_hw_led_init();
 	
 	while(1)
 	{
-		rt_thread_delay(RT_TICK_PER_SECOND);
+		rt_thread_delay(RT_TICK_PER_SECOND * 5);
+
+		raised == 0 ? (raised = 1) : (raised = 0);
+		
+		pir_raise(raised);
 		
 	}
 }

@@ -26,4 +26,6 @@ void rt_hw_led_init(void);
 
 void led_pir_int(char which, char isRaised);
 
+void pir_raise(char raised);
+
 #endif
